@@ -19,6 +19,7 @@
  */
 
 /* Author: Brian Gerkey */
+/* Modified: Itsuka Tomoya */
 
 #include "nav2_amcl/amcl_node.hpp"
 
@@ -221,6 +222,15 @@ AmclNode::AmclNode()
   add_parameter(
     "map_topic", rclcpp::ParameterValue("map"),
     "Topic to subscribe to in order to receive the map to localize on");
+  
+  add_parameter(
+    "enable_uwb", rclcpp::ParameterValue(false),
+    "Requires that AMCL use uwb positioning system");
+  
+  add_parameter(
+    "uwb_topic", rclcpp::ParameterValue("uwb"),
+    "Topic to subscribe to in order to receive the uwb positioning for localization");
+
 }
 
 AmclNode::~AmclNode()
@@ -1101,6 +1111,8 @@ AmclNode::initParameters()
   get_parameter("always_reset_initial_pose", always_reset_initial_pose_);
   get_parameter("scan_topic", scan_topic_);
   get_parameter("map_topic", map_topic_);
+  get_parameter("enable_uwb", enable_uwb_);
+  get_parameter("uwb_topic", uwb_topic_);
 
   save_pose_period_ = tf2::durationFromSec(1.0 / save_pose_rate);
   transform_tolerance_ = tf2::durationFromSec(tmp_tol);
@@ -1245,8 +1257,14 @@ AmclNode::initMessageFilters()
   laser_scan_sub_ = std::make_unique<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>(
     rclcpp_node_.get(), scan_topic_, rmw_qos_profile_sensor_data);
 
-  laser_scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
-    *laser_scan_sub_, *tf_buffer_, odom_frame_id_, 10, rclcpp_node_);
+  if(enable_uwb_){
+    
+    laser_scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
+      *laser_scan_sub_, *tf_buffer_, odom_frame_id_, 10, rclcpp_node_);
+  }else{
+    laser_scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan>>(
+      *laser_scan_sub_, *tf_buffer_, odom_frame_id_, 10, rclcpp_node_);
+  }
 
   laser_scan_connection_ = laser_scan_filter_->registerCallback(
     std::bind(

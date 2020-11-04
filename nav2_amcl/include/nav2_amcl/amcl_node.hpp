@@ -250,6 +250,10 @@ protected:
   double z_rand_;
   std::string scan_topic_{"scan"};
   std::string map_topic_{"map"};
+
+  // TEST: modify for using uwb
+  bool enable_uwb_;
+  std::string uwb_topic_{"uwb"};
 };
 
 }  // namespace nav2_amcl
