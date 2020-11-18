@@ -702,7 +702,7 @@ AmclNode::laserReceived(sensor_msgs::msg::LaserScan::ConstSharedPtr laser_scan)
 
   // If the robot has moved, update the filter
   if (lasers_update_[laser_index]) {
-    updateFilter(laser_index, laser_scan, pose);
+    // updateFilter(laser_index, laser_scan, pose);
 
     // Resample the particles
     if (!(++resample_count_ % resample_interval_)) {
